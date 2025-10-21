@@ -65,13 +65,14 @@ const WriteArticle = () => {
         <input onChange={(e)=> setInput(e.target.value)} value={input} type="text" className='w-full p-2 px-3 mt-2 outline-none text-sm rounded-md border border-gray-300'
         placeholder='The future of artificial intelligence is...' required/>
 
-        <p className='mt-3 flex gap-3 flex-wrap sm:max-w-9/11'>Article Length</p>
-        {
+        <p className='mt-4 text-sm font-medium'>Article Length</p>
+        <div className='mt-3 flex gap-3 flex-wrap sm:max-w-9/11'>
+          {
           articleLength.map((item,i)=>(
             <span onClick={()=> setSelectedLength(item)} key={i} className={`text-xs px-4 py-1 border rounded-full cursor-pointer ${selectedLength.text===item.text ? 'bg-blue-50 text-blue-700':'text-gray-500 border-gray-300'}`}>{item.text}</span>
     
         ))}
-
+        </div>
         <br />
         <button disabled={loading} className='w-full flex justify-center items-center gap-2 bg-gradient-to-r from-[#226BFF] to-[#65ADFF] px-4 py-2 mt-6 text-white text-sm rounded-lg cursor-pointer'>
           
@@ -90,7 +91,7 @@ const WriteArticle = () => {
         </div>
         {!content ? ( <div className='flex-1 flex justify-center items-center'>
           <div className='text-sm flex flex-col items-center gap-5 text-gray-400'>
-              <Edit className='w-5 h-5'/>
+              <Edit className='w-9 h-9'/>
               <p>Enter a topic and click "Generate Article" to get started</p>
           </div>
 
