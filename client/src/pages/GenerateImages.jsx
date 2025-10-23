@@ -1,19 +1,51 @@
-import { Sparkles,Image } from 'lucide-react';
-import React, { useState } from 'react'
+import { Sparkles, Image } from "lucide-react";
+import React, { useState } from "react";
+import axios from "axios";
+import { useAuth } from "@clerk/clerk-react";
+import toast from "react-hot-toast";
+
+axios.defaults.baseURL = import.meta.env.VITE_BASE_URL;
 
 const GenerateImages = () => {
+  const imageStyle = [
+    "Realistic",
+    "Ghibli",
+    "Anime",
+    "Cartoon",
+    "Cyberpunk",
+    "Fantasy",
+    "3D",
+    "Portrait",
+  ];
 
-  const imageStyle = ["Realistic", "Ghibli", "Anime", "Cartoon", "Cyberpunk","Fantasy","3D","Portrait"];
-  
-    const [selectedStyle, setSelectedStyle] = useState("Realistic");
-    const [input, setInput] = useState("");
+  const [selectedStyle, setSelectedStyle] = useState("Realistic");
+  const [input, setInput] = useState("");
 
-    const [publish,setPublish]= useState(false);
-  
-    const onSubmitHandler = async (e) => {
-      e.preventDefault();
+  const [publish, setPublish] = useState(false);
+
+  const [loading, setLoading] = useState(false);
+
+  const { getToken } = useAuth();
+
+  const [content, setContent] = useState("");
+
+  const onSubmitHandler = async (e) => {
+    e.preventDefault();
+    try {
+      setLoading(true);
+      const prompt= `Generate an image of ${input} in ${selectedStyle} style.`;
+      const {data}= await axios.post('/api/ai/generate-image',{prompt,publish},{ headers: {Authorization: `Bearer ${await getToken()}`}});
+      if(data.success){
+        setContent(data.content);
+      }else{
+        toast.error(data.message);
+      }
       
-    };
+    } catch (error) {
+      toast.error(error.message);
+    }
+    setLoading(false);
+  };
 
   return (
     <div className="h-full overflow-y-scroll p-6 flex items-start flex-wrap gap-4 text-slate-700">
@@ -36,36 +68,45 @@ const GenerateImages = () => {
           required
         />
 
-        <p className="mt-4 text-sm font-medium">
-          Style
-        </p>
+        <p className="mt-4 text-sm font-medium">Style</p>
         <div className="mt-3 flex gap-3 flex-wrap sm:max-w-9/11">
           {imageStyle.map((item) => (
-          <span
-            onClick={() => setSelectedStyle(item)}
-            key={item}
-            className={`text-xs px-4 py-1 border rounded-full cursor-pointer ${
-              selectedStyle === item
-                ? "bg-green-50 text-green-700"
-                : "text-gray-500 border-gray-300"
-            }`}
-          >
-            {item}
-          </span>
-        ))}
+            <span
+              onClick={() => setSelectedStyle(item)}
+              key={item}
+              className={`text-xs px-4 py-1 border rounded-full cursor-pointer ${
+                selectedStyle === item
+                  ? "bg-green-50 text-green-700"
+                  : "text-gray-500 border-gray-300"
+              }`}
+            >
+              {item}
+            </span>
+          ))}
         </div>
-        <div className='my-6 flex items-center gap-2'>
-          <label className='relative cursor-pointer'>
-            <input type="checkbox" onChange={(e) => setPublish(e.target.checked)} checked={publish} className='sr-only peer'/>
-             <div className='w-9 h-5 bg-slate-300 rounded-full peer-checked:bg-green-500 transition'></div>
-             <span className='absolute left-1 top-1 bg-white w-3 h-3 rounded-full transition peer-checked:translate-x-4'></span>
+        <div className="my-6 flex items-center gap-2">
+          <label className="relative cursor-pointer">
+            <input
+              type="checkbox"
+              onChange={(e) => setPublish(e.target.checked)}
+              checked={publish}
+              className="sr-only peer"
+            />
+            <div className="w-9 h-5 bg-slate-300 rounded-full peer-checked:bg-green-500 transition"></div>
+            <span className="absolute left-1 top-1 bg-white w-3 h-3 rounded-full transition peer-checked:translate-x-4"></span>
           </label>
 
-          <p className='text-sm'>Make this image public</p>
+          <p className="text-sm">Make this image public</p>
         </div>
-        <button
-          className="w-full flex justify-center items-center gap-2 bg-gradient-to-r from-[#00AD25] to-[#04FF50] px-4 py-2 mt-6 text-white text-sm rounded-lg cursor-pointer">
+        <button disabled={loading} className="w-full flex justify-center items-center gap-2 bg-gradient-to-r from-[#00AD25] to-[#04FF50] px-4 py-2 mt-6 text-white text-sm rounded-lg cursor-pointer">
+          
+
+          {loading ? (
+            <span className="w-4 h-4 my-1 rounded-full border-2 border-t-transparent animate-spin"></span>
+          ) : (
             <Image className="w-5" />
+          )}
+
           Generate Image
         </button>
       </form>
@@ -75,16 +116,23 @@ const GenerateImages = () => {
           <Image className="w-5 h-5 text-[#00AD25]" />
           <h1 className="text-xl font-semibold">Generated Image</h1>
         </div>
-       
-          <div className="flex-1 flex justify-center items-center">
-            <div className="text-sm flex flex-col items-center gap-5 text-gray-400">
-              <Image className="w-9 h-9" />
-              <p>Enter a topic and click "Generate Image" to get started</p>
-            </div>
+
+        {!content?(<div className="flex-1 flex justify-center items-center">
+          <div className="text-sm flex flex-col items-center gap-5 text-gray-400">
+            <Image className="w-9 h-9" />
+            <p>Enter a topic and click "Generate Image" to get started</p>
           </div>
+        </div>):(
+
+          <div className="mt-3 h-full">
+            <img src={content} alt="image"  className="w-full h-full"/>
+          </div>
+        )}
+
+        
       </div>
     </div>
-  )
-}
+  );
+};
 
-export default GenerateImages
+export default GenerateImages;
